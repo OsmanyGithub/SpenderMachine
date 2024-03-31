@@ -1,62 +1,61 @@
 public class Main {
     public static void main(String[] args) {
-        Product chips = new Product("Chips", 2.54);
-        Product ricola = new Product("Ri-Cola", 1.05);
-        Product iceCream = new Product("Ice Cream", 3.35);
-        Product[] products = new Product[10];
-        products[0] = chips;
-        products[1] = ricola;
-        products[2] = iceCream;
-
+        System.out.println("");
+        // Creating Store, Vending Machine, Supplier and a product
         Store store = new Store();
-        VendingMachine machine = new VendingMachine(products);
-        machine.showProducts();
-
+        VendingMachine machine = new VendingMachine();
+        Supplier supplier = new Supplier(machine, store);
         Product fanta = new Product("Fanta", 2.35);
-        System.out.println(".............Executing machine.addProduct(fanta)...........");
+
+        System.out.println(".Executing machine.addProduct(fanta)." +
+                " It have to show one Fanta in the machine.");
+        System.out.println("");
         machine.addProduct(fanta);
         machine.showProducts();
 
-
+        // Creating clients
         Client pepe = new Client("Pepe", 2);
         Client lui = new Client("Lui", 40);
 
-        System.out.println(".....Clients..........");
+        System.out.println(".....Clients created.........");
         System.out.println(pepe);
         System.out.println(lui);
         System.out.println("");
 
 
-        System.out.println(".....Pepe is buying iceCream.......");
+        System.out.println(".....Pepe is buying Fanta..But he haven't enough founds.....");
 
-        machine.buyItem(pepe, iceCream); // Check what is the problem in this line.
+        machine.buyItem(pepe, "Fanta");
         machine.showProducts();
+        System.out.println("");
 
-        System.out.println(".....Lui is buying chips.......");
-        machine.buyItem(lui, chips);
+
+        System.out.println(".Lui is buying chips and Fanta. .Machine has Fanta but not Chips..");
+        machine.buyItem(lui, "chips", "Fanta");
         System.out.println("");
         System.out.println(".......After lui bought......");
         machine.showProducts();
         System.out.println("..After machine were refill.....");
-        machine.supply();
+        machine.supply(supplier);
 
-        machine.showProducts();
-        System.out.println(".....New Client..........");
+        System.out.println(".....New Client.. Mark.........");
         Client mark = new Client("Mark", 50);
         System.out.println(mark);
         System.out.println("");
-        System.out.println(".....Mark in buying........");
-        machine.buySeveralItems(mark, "Doritos", "Cheetos", "Chips", "Sprite");
+        System.out.println(".....Mark in buying..2 Doritos, Cheetos, Sprite......");
+        machine.buyItem(mark, "Doritos", "Doritos","Cheetos", "Sprite");
+        System.out.println("");
+
+        System.out.println("..Show what is left in the machine");
         machine.showProducts();
+
         System.out.println("....Call machine.supply......");
-        machine.supply();
+        machine.supply(supplier);
         System.out.println("");
+
+        System.out.println("");
+        System.out.println("..What products store have now?");
         store.inventory();
-        System.out.println("");
-        System.out.println("");
-        System.out.println("......New Client Susi.....");
-        Client susi = new Client("Susi", 25);
-        System.out.println(susi);
         System.out.println("");
 
 

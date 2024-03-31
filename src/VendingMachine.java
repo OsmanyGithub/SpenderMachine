@@ -1,27 +1,27 @@
+import java.text.DecimalFormat;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 public class VendingMachine {
-    private Store store = new Store();
-    private Product[] products;
-    private int capacity = 10;
-    Operations op = new Operations();
+    private Bank bank = new Bank();
+    protected Product[] products;
+    private final int CAPACITIY = 10;
+    protected Set<String> listOfProductsInTheMachine;
     
-    public VendingMachine(Product[] products){
-        this.products = products;
-    }
-    
-    public VendingMachine(Product product){
-        this.products = new Product[capacity];
-        products[0] = product;
+    public VendingMachine(){
+        products = new Product[CAPACITIY];
+        listOfProductsInTheMachine = new HashSet<>();
     }
 
-    public VendingMachine(Product product, int amount){
-        this.products = new Product[amount];
-        products[0] = product;
+    // Method to keep the name list of products in the machine updated.
+    public void updateListOfProductsInTheMachine(){
+        listOfProductsInTheMachine.clear(); // Clear the previous list
+        for (Product p : products) {
+            if (p != null){
+                listOfProductsInTheMachine.add(p.name());
+            }
+        }
     }
-
 
     public void addProduct(Product product) {
         if (availableSpace() > 0 ) {
@@ -29,11 +29,10 @@ public class VendingMachine {
             for (int i = 0; i < products.length; i++) {
                 if (products[i] == null) {
                     products[i] = product;
+                    listOfProductsInTheMachine.add(products[i].name());
                     return; // Exit the loop after adding the product
                 }
             }
-        } else {
-            System.out.println("Cannot add " + product.name() + "Vending machine is full.");
         }
     }
 
@@ -51,167 +50,114 @@ public class VendingMachine {
 
     // Method to show products in the machine
     public void showProducts(){
-        int curr = 0;
+        int num = 0; // The variable num counts the amount of products in the Machine
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < products.length; i ++){
             if (products[i] != null){
-                curr ++;
+                num ++;
                 sb.append("Product " + (i+1) + ": " + products[i] + "\n");
             }
             else{
                 break;
             }
-
         }
-        System.out.println("Products available in the machine: " + curr);
+        System.out.println("Products available in the machine: " + num);
         System.out.println(sb.toString());
     }
 
-    public void buyItem(Client client, Product[] products){
-        for(Product p: products){
-            if (p != null){
-                buyItem(client, p);
+
+    public void buyItem(Client client, String... productList) {
+        updateListOfProductsInTheMachine(); // Call method to update the list of products in the machine;
+
+        if (productList.length == 1) {
+            String productName = productList[0];
+            if (!listOfProductsInTheMachine.contains(productName)) {
+                System.out.println("Sorry " + productName + " out of stock");
+            }
+            else {
+                for (Product product : this.products) {
+                    if (product != null && productName.equals(product.name())) {
+                        buyItem(client, product); // Call the buyItem method with Product object
+                        return; // No need to continue searching once the product is found and bought
+                    }
+                }
             }
         }
-    }
 
-    public void buySeveralItems(Client client, String... productList) {
-        Set<String> productsInMachine = new HashSet<>();
-       for (String productName: productList){
-           for (Product product: this.products){
-               if (product != null && productName.equals(product.name())){
-                   productsInMachine.add(productName);
-                   buyItem(client, product);
-               }
-           }
-           if (!productsInMachine.contains(productName)){
-               System.out.println("Sorry " + productName + " out of stock");
-           }
-
-       }
-    }
-
-    public void buyItem(Client client, Product product){
-        String currProduct = product.name();
-        for (int i = 0; i < this.products.length; i++){
-            // Handle null elements if the Array is not initialized
-            // with all products to avoid the NullPointerException
-            if (this.products[i] != null && currProduct.equals(this.products[i].name())){
-                double value = op.check(client.getMoney(), product.price());
-                if (value >= 0){
-                    client.setMoney(value);
-                    System.out.println("Operation approved \n" +
-                            "You have bought: " + currProduct + ".\n " +
-                            "Your new card Balance is: $" + client.getMoney());
-
-                    // Remove product from Array
-                    if (i < (this.products.length -1) && (this.products[i+1] != null)){
-                        while(i < (this.products.length -1)){
-                            this.products[i] = this.products[i+1];
-                            i++;
+        else {
+            for (String productName : productList) {
+                if (!listOfProductsInTheMachine.contains(productName)) {
+                    System.out.println("Sorry " + productName + " out of stock");
+                }
+                else {
+                    for (Product product : this.products) {
+                        if (product != null && productName.equals(product.name())) {
+                            buyItem(client, product); // Call the buyItem method with Product object
+                            break; // No need to continue searching once the product is found and bought
                         }
-                        this.products[i] = null;
                     }
-                    // Notify if product is out of stock
-                    Set<String> actualProductList = new HashSet<>();
-                    for (Product prod: this.products){
-                        if (prod != null){
-                            actualProductList.add(prod.name());
-                        }
-
-                    }
-
-                    if (!actualProductList.contains(currProduct)){
-                        System.out.println(product.name() + " " + "Out of stock");
-                    }
-
-
-                }
-                else{
-                    System.out.println("Operation denied. Insufficient balance to by: " + product.name());
                 }
             }
-
-        }
-
-    }
-
-    public void supply(){
-        int curr = 0;
-        int finalProducts = 0;
-        for (int i = 0; i < products.length; i ++) {
-            if (products[i] != null) {
-                curr++;
-            }
-        }
-
-        if (curr < products.length) {
-            Set<String> existingProducts = new HashSet<>();
-            for (Product p: products){
-                if (p != null){
-                    existingProducts.add(p.name());
-                }
-            }
-
-            // Use iterator to safely remove elements from the list
-            Iterator<Pair> iterator = store.stock.iterator();
-            while (iterator.hasNext() && curr < products.length){
-                Pair pair = iterator.next();
-                Product product = pair.product();
-                int quantity = pair.amount();
-
-                if (curr >= products.length){
-                    System.out.println("Vending machine is full  1");
-                    break; // Stop adding if vending machine is full;
-                }
-
-                // Prioritize adding different products before considering same products
-                if (!existingProducts.contains(product.name())) {
-                    products[curr++] = product;  // Add one unit of the different product
-                    finalProducts ++;
-                    int remainingQuantity = quantity - 1; // Decrease the remaining quantity by 1
-                    pair.setAmount(remainingQuantity); // Update amount in the stock
-
-                    // Remove the product from the store if the stock is exhausted
-                    if (remainingQuantity == 0) {
-                        iterator.remove();
-                    }
-                    // Add the product to the set of existing products in the vending machine
-                    existingProducts.add(product.name());
-                }
-            }
-            // If the code has arrived here,
-            // there is still free space in the vending machine and no more different products.
-            // Refill with the same product
-            iterator = store.stock.iterator(); // Reset iterator
-            while(iterator.hasNext() && curr < products.length){
-                System.out.println("...Line 188...");
-                Pair pair = iterator.next();
-                Product product = pair.product();
-                int quantity = pair.amount();
-
-                // Add products to the vending machine until
-                // the stock in the store is exhausted or the machine is full
-                while(quantity > 0 && (curr < products.length)){
-                    products[curr++] = product;
-                    finalProducts ++;
-                    quantity--;
-                }
-
-                // Update the stock amount in store
-                pair.setAmount(quantity);
-                if (quantity == 0) {
-                    iterator.remove(); // Remove the product from the store if the amount becomes 0
-                }
-                if (curr >= products.length){
-                    System.out.println("Vending machine is full 2"); // Stop adding if vending machine is full;
-                }
-            }
-
-        }
-        // Check if the store is empty after supplying the vending machine
-        if (store.stock.isEmpty()) {
-            System.out.println("Total added: " + finalProducts +". Store out of stock.");
         }
     }
+
+    private void buyItem(Client client, Product product) {
+        for (int i = 0; i < this.products.length; i++) {
+            if (product.equals(this.products[i])) {
+                double clientBalance = bank.validatePurchase(client, product);
+
+                if (clientBalance >= 0) {
+                    processSuccessfulPurchase(client, product, i);
+                    updateListOfProductsInTheMachine(); // Call method to update the list of products in the machine
+                } else {
+                    handleInsufficientFunds(client, product);
+                }
+                return; // Once the product is found and processed, exit the loop
+            }
+        }
+    }
+
+    private void processSuccessfulPurchase(Client client, Product product, int index) {
+        DecimalFormat df = new DecimalFormat("#.##");
+        System.out.println("Operation approved \n" +
+                "You have bought: " + product.name() + ".\n " +
+                "Your new card Balance is: $" + df.format(client.getMoney()));
+
+        removeProductFromMachine(index, products);
+
+        updateListOfProductsInTheMachine();
+        if (!listOfProductsInTheMachine.contains(product)) {
+            System.out.println(product + " " + "Out of stock");
+        }
+    }
+
+    private void handleInsufficientFunds(Client client, Product product) {
+        System.out.println("Operation denied. Insufficient balance to buy: " + product.name() + "\n" +
+                "Your actual balance is: " + client.getMoney() + " and " + product.name() + " price is " +
+                product.price());
+    }
+
+    // Product removal Method
+    public void removeProductFromMachine(int num, Product[] prodsArray) {
+        if (prodsArray[num] != null) {
+            // Remove product name from the set
+            System.out.println("Removing product " + prodsArray[num].name() + " from the machine's product list.");
+            listOfProductsInTheMachine.remove(prodsArray[num].name());
+
+            // Remove product from Array
+            for (int i = num; i < prodsArray.length - 1; i++) {
+                prodsArray[i] = prodsArray[i + 1];
+            }
+            prodsArray[prodsArray.length - 1] = null;
+        }
+    }
+
+    public void supply(Supplier supplier) {
+        if (supplier != null) {
+            supplier.supply();
+        } else {
+            System.out.println("Supplier is not set. Cannot supply products.");
+        }
+    }
+
 }

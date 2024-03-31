@@ -1,44 +1,94 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-public class Store {
-    protected List<Pair> stock;
-    private Product cheetos = new Product("Cheetos", 1.35);
-    private Product sprite = new Product("Sprite", 2.99);
-    private Product cocaCola = new Product("Coca Cola", 1.99);
-    private Product doritos = new Product("Doritos", 2.08);
-    private Product pringles = new Product("Pringles", 3.75);
-    private Product beefJerky = new Product("Beef Jerky", 7.37);
-    private Product nutellaBiscuits = new Product("Nutella Biscuits", 4.48);
-    private Product wonderfulPistachios = new Product("Wonderful Pistachios", 7.48);
-    private Product oreoMini = new Product("Oreo mini", 3.17);
+public class Store{
+    private Map<Product,Integer> stock; // Use map to keep track of stock
+    private Map<Product, Double> catalogue; // Use map to keep track of product-price values
 
+    // Constructor to initialize stock and catalogue
     public Store(){
-        stock = new ArrayList<Pair>();
-
-        stock.add(new Pair(cheetos, 3));
-       /* stock.add(new Pair(sprite, 3));
-        stock.add(new Pair(cocaCola, 3));
-        stock.add(new Pair(doritos, 3));
-        stock.add(new Pair(pringles, 3));
-        stock.add(new Pair(beefJerky, 3));
-        stock.add(new Pair(nutellaBiscuits, 3));
-        stock.add(new Pair(wonderfulPistachios, 3));
-        stock.add(new Pair(oreoMini, 3));
-
-        */
+        stock = new HashMap<>();
+        catalogue = new HashMap<>();
+        initializeStore();
 
 
     }
 
-    public void inventory(){
-        for (int i = 0; i < stock.size(); i++){
-           Pair pair = stock.get(i);
-           Product product = pair.product();
-           int quantity = pair.amount();
-           System.out.println(product + " (" + quantity +" units)");
+    public void initializeStore(){
+        Product[] products = {
+                new Product("Cheetos", 1.35),
+                new Product("Sprite", 2.99),
+                new Product("Coca Cola", 1.99),
+                new Product("Doritos", 2.08),
+                new Product("Pringles", 3.75),
+                new Product("Beef Jerky", 7.37),
+                new Product("Nutella Biscuits", 4.48),
+                new Product("Wonderful Pistachios", 7.48),
+                new Product("Oreo mini", 3.17)
+        };
+
+        // Initial quantity for each product is 3
+        for (Product product: products){
+            stock.put(product, 3);
         }
-
     }
 
+    // Method to populate catalogue with product-price values
+    private void populateCatalogue(){
+        for (Map.Entry<Product, Integer> entry: stock.entrySet()){
+            catalogue.put(entry.getKey(), entry.getKey().price());
+        }
+    }
+
+    // Method to add a product to stock
+    public void addProduct(Product product, int quantity){
+        if (stock.containsKey(product)){
+            int currentQuantity = stock.get(product);
+            stock.put(product, currentQuantity + quantity);
+        }
+        else{
+            stock.put(product, quantity);
+            catalogue.put(product, product.price()); // Add to catalogue if not already present
+        }
+    }
+
+    // Method to remove product from stock
+    public void removeProduct(Product product, int quantity){
+        if (stock.containsKey(product)){
+            int currentQuantity = stock.get(product);
+            if (currentQuantity <= quantity){
+                stock.remove(product);
+                catalogue.remove(product); // Remove from catalogue if not more in stock
+            }
+            else{
+                stock.put(product, currentQuantity - quantity);
+            }
+        }
+    }
+
+    // Method to display the current stock
+    public void inventory(){
+        System.out.println("Current stock: ");
+        for (Map.Entry<Product, Integer> entry : stock.entrySet()){
+            System.out.println(entry.getKey() + " (" + entry.getValue() + " units)");
+        }
+    }
+
+    // Method to display the catalogue
+    public void showCatalogue(){
+        System.out.println("Catalogue: ");
+        for (Map.Entry<Product, Double> entry : catalogue.entrySet()){
+            System.out.println(entry.getKey() + " Price: $" + entry.getValue());
+        }
+    }
+
+    // Method to return stock
+    public Map<Product, Integer> getStock() {
+        return stock;
+    }
+
+    // Method to return the catalogue
+    public Map<Product, Double> getCatalogue() {
+        return catalogue;
+    }
 }
